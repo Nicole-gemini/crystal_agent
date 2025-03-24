@@ -1,0 +1,47 @@
+### model
+model_name_or_path_or_path: /home/featurize/work/model/Qwen2.5-1.5B
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all
+
+### dataset
+dataset: glaive_toolcall_en, glaive_toolcall_zh, alpaca_gpt4_en, alpaca_gpt4_zh
+trust_remote_code: true
+template: qwen
+# 最大序列长度设置为1024，以降低显存占用
+cutoff_len: 1024
+max_samples: 50000
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+### output
+output_dir: /home/featurize/data/checkpoints/agent
+logging_steps: 100
+save_steps: 1000
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+# 将梯度累积步数设置为16，每次前向传递的batch较小，节省显存，
+# 同时累积出相当于较大batch的效果
+gradient_accumulation_steps: 16
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+# 设置梯度检查点（gradient_checkpointing），使前向传播时节省内存开销，
+# 适用于大模型的微调任务
+gradient_checkpointing: true
+ddp_timeout: 180000000
+
+### eval：评估
+val_size: 0.01
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 1000
+
