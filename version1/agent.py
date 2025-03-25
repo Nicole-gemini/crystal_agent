@@ -31,7 +31,9 @@ class MysticRouterAgent:
         result = self.client.chat.completions.create(
             messages=messages,
             model="gpt-3.5-turbo",
-            tools=self.tools
+            tools=self.tools,
+            tool_choice="auto",  # 自动选择工具
+            temperature=0.1  # 降低温度以减少随机性
         )
         tool_call = result.choices[0].message.tool_calls[0].function
         tool_name = tool_call.name
@@ -50,6 +52,7 @@ class MysticRouterAgent:
         # 第二次对话：让GPT基于工具执行结果输出最终答案
         final_result = self.client.chat.completions.create(
             messages=messages,
-            model="gpt-3.5-turbo"
+            model="gpt-3.5-turbo",
+            tools = None
         )
-        return final_result.choices[0].message.content
+        return f"Answer:{final_result.choices[0].message.content}"

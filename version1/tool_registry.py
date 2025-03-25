@@ -5,6 +5,7 @@ from typing import Dict, Any, Callable
 from mystic_tools import get_wuxing_information, get_aztro_information, get_tarot_information
 
 # 根据实际部署情况配置 OPENAI 环境变量
+# 此处使用vllm部署的本地环境
 os.environ["OPENAI_BASE_URL"] = "http://localhost:8000/v1"
 os.environ["OPENAI_API_KEY"] = "0"
 
@@ -18,9 +19,9 @@ def register_tool(
     func: Callable
 ):
     """
-    注册一个新工具（函数）。
+    注册一个新玄学工具。
     :param name:           工具函数名称（对外暴露给对话模型）
-    :param description:    工具功能描述（对话模型可见）
+    :param description:    工具功能描述（仅对话模型可见）
     :param parameters:     工具参数的 JSON Schema 定义
     :param func:           实际的可调用函数
     """
@@ -46,11 +47,10 @@ register_tool(
     name="get_wuxing_information",
     description="根据用户提供的姓名、性别、出生年月日时分秒信息，对用户的五行进行分析，推荐符合五行的水晶。",
     parameters={
-        "FIRST_NAME": {"type": "string"},
-        "SECOND_NAME": {"type": "string"},
-        "BIRTH": {"type": "string"}, # 日期格式：YYYYMMDDHHMMS
-        "GENDER": {"type": "string"}, # 男/女
-        "description": {"type": "string"}
+        "FIRST_NAME": {"type": "string", "description": "姓氏"},
+        "SECOND_NAME": {"type": "string", "description": "名字"},
+        "BIRTH": {"type": "string", "description": "出生日期(YYYYMMDDHHMMSS)"},
+        "GENDER": {"type": "string", "description": "性别: 男/女"}
     },
     func=get_wuxing_information
 )
@@ -59,8 +59,7 @@ register_tool(
     name="get_aztro_information",
     description="根据用户提供的星座名称，查询星座年度运势，推荐能提升运势的水晶。",
     parameters={
-        "star": {"type": "string"}, # 星座名称: 白羊座、金牛座...
-        "description": {"type": "string"}
+       "star": {"type": "string", "description": "星座名称"}
     },
     func=get_aztro_information
 )
@@ -69,8 +68,7 @@ register_tool(
     name="get_tarot_information",
     description="根据用户抽取的塔罗牌名称，查询塔罗牌的正位和负位含义，推荐对应水晶。",
     parameters={
-        "name": {"type": "string"}, # 塔罗牌的大阿卡纳牌名称：The Fool、The Magician...
-        "description": {"type": "string"}
+        "name": {"type": "string", "description": "塔罗牌名称"} 
     },
     func=get_tarot_information
 )

@@ -17,8 +17,8 @@ def get_wuxing_information(keyword:dict):
     """通过阿里云市场的命理玄学知识图谱-八字命运精批算命-艾科瑞特（iCREDIT）API，查询用户的五行属性"""
     host = 'https://xuanxue.market.alicloudapi.com'
     path = '/ai_china_knowledge/bazi/v1'
-    #阿里云APPCODE
-    appcode = '6a246211b124486d952d71c5ba549a30' 
+    #阿里云APPCODE: 请替换成自己的APPCODE
+    appcode = ''
     url = host + path 
     querys = ""
     #参数配置
@@ -51,7 +51,8 @@ def get_aztro_information(keyword:dict):
     host = 'https://ali-star-lucky.showapi.com'
     path = '/star'
     method = 'GET'
-    appcode = '6a246211b124486d952d71c5ba549a30'
+    # 阿里云APPCODE: 请替换成自己的APPCODE
+    appcode = ''
     querys = ''
     # 让星座名称和API中的星座名称对应，方便调用，符合日常使用习惯
     sign_map={

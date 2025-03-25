@@ -18,8 +18,8 @@ def get_wuxing_information(keyword:dict):
     """通过阿里云市场的命理玄学知识图谱-八字命运精批算命-艾科瑞特（iCREDIT）API，查询用户的五行属性"""
     host = 'https://xuanxue.market.alicloudapi.com'
     path = '/ai_china_knowledge/bazi/v1'
-    #阿里云APPCODE
-    appcode = '6a246211b124486d952d71c5ba549a30' 
+    #阿里云APPCODE：请替换成自己的APPCODE
+    appcode = '' # 如果没有appcode，可以在阿里云市场申请
     url = host + path 
     querys = ""
     #参数配置
@@ -131,6 +131,22 @@ tool_map = {"get_wuxing_information": get_wuxing_information,
             "get_tarot_information": get_tarot_information}
 
 
+# def clean_output(text):
+#     """清理乱码内容"""
+#     # 由于刚开始lora训练模型时序列长度限制成512，文本内容出现乱码，需要清理
+#     # 检测泰语起始符或JSON起始符
+#     pattern = r'([\u0E00-\u0E7F\u4E00-\u9FFF]|โ|ฏ|ฑ).*?\{|{'
+#     match = re.search(pattern, text)
+#     if match:
+#         return text[:match.start()]
+
+#     reversed_text = text[::-1]
+#     end_search = pattern.search(reversed_text)
+#     if end_search:
+#         # 计算正向截断位置
+#         end_pos = len(text) - end_search.start()
+#         text = text[:end_pos]
+#     return text
 if __name__ == "__main__":
     client = OpenAI()
     tools = [
@@ -143,10 +159,7 @@ if __name__ == "__main__":
                                 "type": "object",
                                 "properties": {
                                     "keyword": {
-                                        "FIRST_NAME": "string",
-                                        "SECOND_NAME": "string",
-                                        "BIRTH": "string",
-                                        "GENDER": "string",
+                                        "type":"dict",
                                         "description": "五行分析",
                                     },
                                 },
@@ -163,7 +176,7 @@ if __name__ == "__main__":
                                 "type": "object",
                                 "properties": {
                                     "keyword": {
-                                        "star": "string",
+                                        "type":"dict",
                                         "description": "星座年度运势",
                                     },
                                 },
@@ -180,8 +193,8 @@ if __name__ == "__main__":
                                 "type": "object",
                                 "properties": {
                                     "keyword": {
-                                        "name": "string",
-                                        "description": "塔罗牌正位和负位含义",
+                                        "type":"dict",
+                                        "description": "塔罗牌含义",
                                     },
                                 },
                                 "required": ["keyword"],
@@ -191,22 +204,18 @@ if __name__ == "__main__":
     ]
 
     messages = []
-    messages.append({"role": "system", "content": "你是一个有用的小助手，请调用下面的工具来回答用户的问题，参考工具输出进行回答。"})
+    messages.append({"role": "system", "content": "你是一个有用的小助手，请调用工具，参考工具输出，推荐1到3个合适的水晶饰品。请始终使用简体中文进行回复。"})
     #messages.append({"role": "user", "content": "我是张三，男，1987年7月7日17时17分17秒出生，想知道我的五行属性和破太岁的水晶饰品。"})
     #messages.append({"role": "user", "content": "我是双子座，想知道我的星座运势和提升运势的水晶。"})
     #messages.append({"role": "user", "content": "我抽取了The Fool塔罗牌，想知道正位和负位的含义，以及提升正位能量的水晶。"})
-    messages.append({"role": "user", "content": "我是金牛座，想知道我的星座运势和提升职场运势的水晶。"})
-    result = client.chat.completions.create(messages=messages, model="gpt-3.5-turbo", tools=tools)
-    print("result")
-    print(result)
-    tool_call = result.choices[0].message.tool_calls[0].function
-    print("tool_call")
-    print(tool_call)
-    name, arguments = tool_call.name, json.loads(tool_call.arguments)
-    messages.append({"role": "function", "content": json.dumps({"name": name, "arguments": arguments}, ensure_ascii=False)})
-    tool_result = tool_map[name](**arguments)
-    messages.append({"role": "tool", "content": "工具输出结果为: " + tool_result})
-    for msg in messages:
-        print('--->', msg)
-    result = client.chat.completions.create(messages=messages, model="gpt-3.5-turbo")
+    messages.append({"role": "user", "content": "我是金牛座，我要买幸运水晶。"})
+    result = client.chat.completions.create(messages=messages, model="gpt-4o", tools=tools,max_tokens=512,temperature=0.2, )
+    # 如果出现乱码的话，可以使用下面的代码进行清理
+    # result.choices[0].message.content=clean_output(result.choices[0].message.content)
+    func_call = result.choices[0].message.tool_calls[0].function
+    name, args = func_call.name, json.loads(func_call.arguments)
+    messages.append({"role": "function", "content": json.dumps({"name": name, "arguments": args}, ensure_ascii=False)})
+    func_result = tool_map[name](**args)
+    messages.append({"role": "tool", "content": "工具输出结果为: " + func_result})
+    result = client.chat.completions.create(messages=messages, model="gpt-4o")
     print("Answer: ", result.choices[0].message.content)
